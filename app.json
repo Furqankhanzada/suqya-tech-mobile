@@ -37,6 +37,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "8d924673-b815-4a12-906c-d937bf798b43"
+      }
+    },
+    "owner": "furqankhanzada"
   }
 }
