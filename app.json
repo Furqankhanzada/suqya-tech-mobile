@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "suqyatech",
+    "name": "Suqya Tech",
     "slug": "suqyatech",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,15 +8,28 @@
     "scheme": "suqyatech",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.starterkitexpo",
+      "config": {
+        "googleMapsApiKey": "AIzaSyBRF8qX1KhVDDjtuUc0SWkmpejaG8f4Ca8"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.starterkitexpo",
+      "googleMaps": {
+        "apiKey": "AIzaSyBRF8qX1KhVDDjtuUc0SWkmpejaG8f4Ca8"
+      }
     },
     "web": {
       "bundler": "metro",
@@ -25,15 +38,27 @@
     },
     "plugins": [
       "expo-router",
+      "expo-web-browser",
+      "expo-font",
       [
         "expo-splash-screen",
         {
+          "backgroundColor": "#ffffff",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "dark": {
+            "image": "./assets/images/splash-icon.png",
+            "backgroundColor": "#0a0a0a"
+          },
+          "imageWidth": 250
         }
-      ]
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
+      ],
+      "./plugins/withSimdjson"
     ],
     "experiments": {
       "typedRoutes": true
