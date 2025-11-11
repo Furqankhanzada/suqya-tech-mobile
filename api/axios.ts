@@ -3,7 +3,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import axios, { AxiosError } from 'axios';
 import { router } from 'expo-router';
 
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = 'https://108.fbldw.furqan.codes/api';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
