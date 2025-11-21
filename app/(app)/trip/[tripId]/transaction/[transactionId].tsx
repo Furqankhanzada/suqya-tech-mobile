@@ -1,9 +1,5 @@
 import React, { useMemo, useRef } from 'react';
-import {
-  Save,
-  CreditCard,
-  AlertCircleIcon,
-} from 'lucide-react-native';
+import { Save, CreditCard, AlertCircleIcon } from 'lucide-react-native';
 import { withObservables } from '@nozbe/watermelondb/react';
 
 import { Box } from '@/components/ui/box';
@@ -33,6 +29,7 @@ import { CustomerInfo } from '@/components/CustomerInfo';
 import { database } from '@/database';
 import { TransactionModel } from '@/database/model/Transactions';
 import Payment, { PaymentRef } from '@/components/Payment';
+import { KeyboardAvoidingView, Platform } from 'react-native';
 
 interface IFormInput {
   bottleGiven?: string;
@@ -89,160 +86,171 @@ function TransactionScreenView({ transaction }: TransactionScreenViewProps) {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <VStack className="flex-1 px-6">
-        <AppHeader showBackButton={true} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <VStack className="flex-1 px-6">
+          <AppHeader showBackButton={true} />
 
-        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-          <VStack className="py-4" space="xl">
-            <CustomerInfo
-              priority={transaction.priority}
-              isCompleted={isCompleted(transaction)}
-              customer={transaction.customer}
-            />
+          <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+            <VStack className="py-4" space="xl">
+              <CustomerInfo
+                priority={transaction.priority}
+                isCompleted={isCompleted(transaction)}
+                customer={transaction.customer}
+              />
 
-            {/* Payment Button */}
-            <Button
-              variant="outline"
-              className="border-border bg-background rounded-lg"
-              onPress={handleOpenPayment}
-            >
-              <ButtonIcon as={CreditCard} className="w-5 h-5 text-primary mr-2" />
-              <ButtonText className="text-foreground font-medium text-base">
-                Record Payment
-              </ButtonText>
-            </Button>
-            <Card className="p-4 bg-background border border-border">
-              <VStack space="lg">
-                <VStack space="xs">
-                  <Heading className="text-foreground text-xl font-bold">
-                    Record Delivery
-                  </Heading>
-                  <Text className="text-sm text-muted-foreground">
-                    Record bottles given and taken for this customer
-                  </Text>
-                </VStack>
-
+              {/* Payment Button */}
+              <Button
+                variant="outline"
+                className="border-border bg-background rounded-lg"
+                onPress={handleOpenPayment}
+              >
+                <ButtonIcon
+                  as={CreditCard}
+                  className="w-5 h-5 text-primary mr-2"
+                />
+                <ButtonText className="text-foreground font-medium text-base">
+                  Record Payment
+                </ButtonText>
+              </Button>
+              <Card className="p-4 bg-background border border-border">
                 <VStack space="lg">
-                  <Controller
-                    control={control}
-                    name="bottleGiven"
-                    rules={{
-                      pattern: {
-                        value: /^(100|[1-9]?\d)$/,
-                        message: 'Must be a whole number between 0 and 100',
-                      },
-                    }}
-                    render={({ field, formState: { errors } }) => (
-                      <FormControl
-                        isInvalid={Boolean(errors.bottleGiven?.message)}
-                      >
-                        <FormControlLabel>
-                          <FormControlLabelText className="text-base font-medium text-foreground">
-                            Bottles Given
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input className="bg-input-background border-border rounded-lg">
-                          <InputField
-                            placeholder="Number of bottles given"
-                            placeholderTextColor="#9CA3AF"
-                            keyboardType="numeric"
-                            className="text-foreground"
-                            value={field.value}
-                            onChangeText={field.onChange}
-                          />
-                        </Input>
-                        <FormControlError>
-                          <FormControlErrorIcon
-                            as={AlertCircleIcon}
-                            className="text-red-500"
-                          />
-                          <FormControlErrorText className="text-red-500">
-                            {errors.bottleGiven?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
-                    )}
-                  />
-
-                  <Controller
-                    control={control}
-                    name="bottleTaken"
-                    rules={{
-                      pattern: {
-                        value: /^(100|[1-9]?\d)$/,
-                        message: 'Must be a whole number between 0 and 100',
-                      },
-                    }}
-                    render={({ field, formState: { errors } }) => (
-                      <FormControl
-                        isInvalid={Boolean(errors.bottleTaken?.message)}
-                      >
-                        <FormControlLabel>
-                          <FormControlLabelText className="text-base font-medium text-foreground">
-                            Bottles Taken
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input className="bg-input-background border-border rounded-lg">
-                          <InputField
-                            placeholder="Number of bottles taken"
-                            placeholderTextColor="#9CA3AF"
-                            keyboardType="numeric"
-                            className="text-foreground"
-                            value={field.value}
-                            onChangeText={field.onChange}
-                          />
-                        </Input>
-                        <FormControlError>
-                          <FormControlErrorIcon
-                            as={AlertCircleIcon}
-                            className="text-red-500"
-                          />
-                          <FormControlErrorText className="text-red-500">
-                            {errors.bottleTaken?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
-                    )}
-                  />
-
-                  <Box className="p-3 rounded-lg bg-transparent border border-border">
-                    <HStack className="justify-between items-center">
-                      <Text className="text-sm font-medium text-foreground">
-                        Remaining Bottles:
-                      </Text>
-                      <Text
-                        className={cn(
-                          'text-lg font-bold text-muted-foreground',
-                          {
-                            'text-green-500': remainingBottles > 0,
-                            'text-red-500': remainingBottles < 0,
-                          },
-                        )}
-                      >
-                        {remainingBottles}
-                      </Text>
-                    </HStack>
-                    <Text className="text-xs mt-1 text-muted-foreground">
-                      Bottles at home/office, calculated automatically based on
-                      last transaction
+                  <VStack space="xs">
+                    <Heading className="text-foreground text-xl font-bold">
+                      Record Delivery
+                    </Heading>
+                    <Text className="text-sm text-muted-foreground">
+                      Record bottles given and taken for this customer
                     </Text>
-                  </Box>
+                  </VStack>
+
+                  <VStack space="lg">
+                    <Controller
+                      control={control}
+                      name="bottleGiven"
+                      rules={{
+                        pattern: {
+                          value: /^(100|[1-9]?\d)$/,
+                          message: 'Must be a whole number between 0 and 100',
+                        },
+                      }}
+                      render={({ field, formState: { errors } }) => (
+                        <FormControl
+                          isInvalid={Boolean(errors.bottleGiven?.message)}
+                        >
+                          <FormControlLabel>
+                            <FormControlLabelText className="text-base font-medium text-foreground">
+                              Bottles Given
+                            </FormControlLabelText>
+                          </FormControlLabel>
+                          <Input className="bg-input-background border-border rounded-lg">
+                            <InputField
+                              placeholder="Number of bottles given"
+                              placeholderTextColor="#9CA3AF"
+                              keyboardType="numeric"
+                              className="text-foreground"
+                              value={field.value}
+                              onChangeText={field.onChange}
+                            />
+                          </Input>
+                          <FormControlError>
+                            <FormControlErrorIcon
+                              as={AlertCircleIcon}
+                              className="text-red-500"
+                            />
+                            <FormControlErrorText className="text-red-500">
+                              {errors.bottleGiven?.message}
+                            </FormControlErrorText>
+                          </FormControlError>
+                        </FormControl>
+                      )}
+                    />
+
+                    <Controller
+                      control={control}
+                      name="bottleTaken"
+                      rules={{
+                        pattern: {
+                          value: /^(100|[1-9]?\d)$/,
+                          message: 'Must be a whole number between 0 and 100',
+                        },
+                      }}
+                      render={({ field, formState: { errors } }) => (
+                        <FormControl
+                          isInvalid={Boolean(errors.bottleTaken?.message)}
+                        >
+                          <FormControlLabel>
+                            <FormControlLabelText className="text-base font-medium text-foreground">
+                              Bottles Taken
+                            </FormControlLabelText>
+                          </FormControlLabel>
+                          <Input className="bg-input-background border-border rounded-lg">
+                            <InputField
+                              placeholder="Number of bottles taken"
+                              placeholderTextColor="#9CA3AF"
+                              keyboardType="numeric"
+                              className="text-foreground"
+                              value={field.value}
+                              onChangeText={field.onChange}
+                            />
+                          </Input>
+                          <FormControlError>
+                            <FormControlErrorIcon
+                              as={AlertCircleIcon}
+                              className="text-red-500"
+                            />
+                            <FormControlErrorText className="text-red-500">
+                              {errors.bottleTaken?.message}
+                            </FormControlErrorText>
+                          </FormControlError>
+                        </FormControl>
+                      )}
+                    />
+
+                    <Box className="p-3 rounded-lg bg-transparent border border-border">
+                      <HStack className="justify-between items-center">
+                        <Text className="text-sm font-medium text-foreground">
+                          Remaining Bottles:
+                        </Text>
+                        <Text
+                          className={cn(
+                            'text-lg font-bold text-muted-foreground',
+                            {
+                              'text-green-500': remainingBottles > 0,
+                              'text-red-500': remainingBottles < 0,
+                            },
+                          )}
+                        >
+                          {remainingBottles}
+                        </Text>
+                      </HStack>
+                      <Text className="text-xs mt-1 text-muted-foreground">
+                        Bottles at home/office, calculated automatically based
+                        on last transaction
+                      </Text>
+                    </Box>
+                  </VStack>
                 </VStack>
-              </VStack>
-            </Card>
-            <Button
-              className="bg-primary rounded-lg"
-              onPress={handleSubmit(onSubmit)}
-              isDisabled={isPending}
-            >
-              <ButtonIcon as={Save} className="w-5 h-5 text-foreground mr-2" />
-              <ButtonText className="text-primary-foreground font-medium text-lg">
-                {isPending ? 'Updating...' : 'Update Transaction'}
-              </ButtonText>
-            </Button>
-          </VStack>
-        </ScrollView>
-      </VStack>
+              </Card>
+              <Button
+                className="bg-primary rounded-lg"
+                onPress={handleSubmit(onSubmit)}
+                isDisabled={isPending}
+              >
+                <ButtonIcon
+                  as={Save}
+                  className="w-5 h-5 text-foreground mr-2"
+                />
+                <ButtonText className="text-primary-foreground font-medium text-lg">
+                  {isPending ? 'Updating...' : 'Update Transaction'}
+                </ButtonText>
+              </Button>
+            </VStack>
+          </ScrollView>
+        </VStack>
+      </KeyboardAvoidingView>
 
       {/* Payment Modal */}
       <Payment
