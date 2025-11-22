@@ -29,7 +29,11 @@
       "package": "com.anonymous.starterkitexpo",
       "googleMaps": {
         "apiKey": "AIzaSyBRF8qX1KhVDDjtuUc0SWkmpejaG8f4Ca8"
-      }
+      },
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -66,9 +70,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "8d924673-b815-4a12-906c-d937bf798b43"
+        "projectId": "d127940a-05ac-417e-a0fd-f4b4352eec03"
       }
     },
-    "owner": "furqankhanzada"
+    "owner": "saad-khan"
   }
 }
