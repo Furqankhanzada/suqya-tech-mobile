@@ -1,6 +1,11 @@
 <resources>
   <string name="app_name">Suqya Tech</string>
+
+  <!-- Expo defaults -->
   <string name="expo_system_ui_user_interface_style" translatable="false">automatic</string>
   <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
   <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
+
+  <!-- Google Maps SDK Key -->
+  <string name="google_maps_api_key">AIzaSyBRF8qX1KhVDDjtuUc0SWkmpejaG8f4Ca8</string>
 </resources>

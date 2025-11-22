@@ -29,7 +29,11 @@
       "package": "com.anonymous.starterkitexpo",
       "googleMaps": {
         "apiKey": "AIzaSyBRF8qX1KhVDDjtuUc0SWkmpejaG8f4Ca8"
-      }
+      },
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
