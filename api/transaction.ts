@@ -38,7 +38,7 @@ export const fetchTripTransaction = async (
 export const updateTransaction = async (transactionId: string, body: any) => {
   return (
     await api.patch<{ doc: Transaction; message: string }>(
-      `/${collection}/endpoint/${transactionId}`,
+      `/${collection}/${transactionId}`,
       body,
     )
   ).data;
