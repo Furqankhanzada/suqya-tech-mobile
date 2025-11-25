@@ -41,14 +41,18 @@ const bottomSheetItemStyle = tva({
   base: 'p-3 flex-row items-center rounded-sm w-full disabled:opacity-0.4 web:pointer-events-auto disabled:cursor-not-allowed hover:bg-background-50 active:bg-background-100 focus:bg-background-100 web:focus-visible:bg-background-100',
 });
 
+type BottomSheetRef = React.MutableRefObject<
+  React.ComponentRef<typeof GorhomBottomSheet> | null
+>;
+
 const BottomSheetContext = createContext<{
   visible: boolean;
-  bottomSheetRef: React.RefObject<GorhomBottomSheet>;
+  bottomSheetRef: BottomSheetRef;
   handleClose: () => void;
   handleOpen: () => void;
 }>({
   visible: false,
-  bottomSheetRef: { current: null },
+  bottomSheetRef: { current: null } as BottomSheetRef,
   handleClose: () => {},
   handleOpen: () => {},
 });
@@ -65,7 +69,7 @@ export const BottomSheet = ({
   onOpen?: () => void;
   onClose?: () => void;
 }) => {
-  const bottomSheetRef = useRef<GorhomBottomSheet>(null);
+  const bottomSheetRef = useRef<React.ComponentRef<typeof GorhomBottomSheet>>(null);
 
   const [visible, setVisible] = useState(false);
 

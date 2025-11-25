@@ -294,7 +294,6 @@ const Payment = forwardRef<PaymentRef, PaymentProps>(
                     </FormControlLabelText>
                   </FormControlLabel>
                   <Textarea
-                    variant="outline"
                     size="sm"
                     className="border border-border rounded-lg bg-input-background"
                   >
@@ -342,4 +341,3 @@ cssInterop(BottomSheetModal, {
 Payment.displayName = 'Payment';
 
 export default Payment;
-

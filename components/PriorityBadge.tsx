@@ -16,6 +16,7 @@ const badgeVariants = tva({
       HIGH: "bg-priority-high text-priority-high-foreground",
       MEDIUM: "bg-priority-medium text-priority-medium-foreground",
       LOW: "bg-priority-low text-priority-low-foreground",
+      ALL: "bg-priority-low text-priority-low-foreground",
     },
   },
   defaultVariants: {
@@ -31,6 +32,7 @@ const textVariants = tva({
       HIGH: "text-priority-high-foreground",
       MEDIUM: "text-priority-medium-foreground",
       LOW: "text-priority-low-foreground",
+      ALL: "text-priority-low-foreground",
     },
   },
   defaultVariants: {

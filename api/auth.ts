@@ -4,6 +4,8 @@ import type {
   User,
 } from "./types";
 
+export type { Collection, Session, User } from './types';
+
 export interface LoginResponse {
   message: string;
   user: User;
