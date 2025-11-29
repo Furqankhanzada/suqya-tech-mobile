@@ -19,7 +19,7 @@ type PaymentParams = {
 
 export const usePayment = () => {
   const paymentCollection = database.get<PaymentModel>('payments');
-  
+
   return useMutation({
     mutationFn: async (params: PaymentParams) => {
       const isUnsyncedPayment = params.payment?.syncState === 'created';
@@ -43,11 +43,15 @@ export const usePayment = () => {
       const isNewPayment = !params.payment;
       const isUnsyncedPayment = params.payment?.syncState === 'created';
 
+      const { customer, trip, payment: _ignored, ...safeFields } = params;
+
       if (isNewPayment) {
         // Create new payment locally
         const localPayment = await database.write(async () => {
           return await paymentCollection.create((payment) => {
-            Object.assign(payment, params);
+            Object.assign(payment, safeFields);
+            (payment as any).customerId = customer;
+            (payment as any).tripId = trip;
             payment.syncState = 'created';
             payment.changedKeys = null;
           });
@@ -59,14 +63,18 @@ export const usePayment = () => {
         // Update unsynced payment before sync
         await database.write(async () => {
           await params.payment!.update((payment) => {
-            Object.assign(payment, params);
+            Object.assign(payment, safeFields);
+            (payment as any).customerId = customer;
+            (payment as any).tripId = trip;
           });
         });
         return { localPayment: params.payment };
       }
 
       // Update synced payment with changed keys tracking
-      const existingKeys = (params.payment!.changedKeys || '').split(',').filter(Boolean);
+      const existingKeys = (params.payment!.changedKeys || '')
+        .split(',')
+        .filter(Boolean);
       const newKeys = ['type', 'amount', 'comments'];
       const allChangedKeys = Array.from(new Set([...existingKeys, ...newKeys]));
 
@@ -87,10 +95,22 @@ export const usePayment = () => {
       if (!context?.localPayment) return;
 
       if (result.type === 'create') {
-        const invoiceId = typeof result.doc.invoice === 'string' 
-          ? result.doc.invoice 
-          : result.doc.invoice.id;
-        await context.localPayment.markAsSynced(result.doc.id, invoiceId);
+        const doc = result.doc as any;
+
+        const invoice = doc?.invoice;
+        let invoiceId: string | undefined;
+
+        if (typeof invoice === 'string') {
+          invoiceId = invoice;
+        } else if (invoice && typeof invoice === 'object' && 'id' in invoice) {
+          invoiceId = invoice.id;
+        }
+
+        if (invoiceId) {
+          await context.localPayment.markAsSynced(doc.id, invoiceId);
+        } else {
+          await context.localPayment.markAsSynced(doc.id);
+        }
       } else {
         await context.localPayment.markAsSynced();
       }
@@ -101,4 +121,3 @@ export const usePayment = () => {
     },
   });
 };
-
