@@ -45,6 +45,7 @@ function TripsScreen() {
   const [isPending, startTransition] = useTransition();
   const { mutate: signOut, isPending: isLoading } = useLogout();
   const [searchTerm, setSearchTerm] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchTrips = useCallback(() => {
     const filters: Q.Clause[] = [Q.sortBy('created_at', Q.desc)];
@@ -110,6 +111,12 @@ function TripsScreen() {
 
   const handleTripPress = (trip: TripModel) => {
     router.push(`/trip/${trip.id}`);
+  };
+
+  // Pull-to-refresh: sync trips and toggle spinner
+  const onRefresh = () => {
+    setRefreshing(true);
+    syncTrips(userId).finally(() => setRefreshing(false));
   };
 
   return (
@@ -207,6 +214,8 @@ function TripsScreen() {
           contentContainerClassName="gap-3 grow"
           showsVerticalScrollIndicator={false}
           data={trips}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
           keyExtractor={(item) => item.id}
           renderItem={({ item: trip }) => {
             return (
