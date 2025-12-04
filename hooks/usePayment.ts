@@ -19,9 +19,11 @@ type PaymentParams = {
 
 export const usePayment = () => {
   const paymentCollection = database.get<PaymentModel>('payments');
-  
+
   return useMutation({
     mutationFn: async (params: PaymentParams) => {
+      console.log('mutationFn');
+
       const isUnsyncedPayment = params.payment?.syncState === 'created';
       const isSyncedPaymentUpdate = params.payment && !isUnsyncedPayment;
 
@@ -31,15 +33,18 @@ export const usePayment = () => {
           amount: params.amount,
           comments: params.comments,
         };
+        console.log('update payment function');
         const result = await updatePayment(params.payment!.id, updates);
         return { type: 'update' as const, doc: result.doc };
       }
+      console.log('create payment function');
 
       const result = await createPayment(params);
       return { type: 'create' as const, doc: result.doc };
     },
 
     onMutate: async (params) => {
+      const { customer, trip, ...restParams } = params;
       const isNewPayment = !params.payment;
       const isUnsyncedPayment = params.payment?.syncState === 'created';
 
@@ -47,8 +52,10 @@ export const usePayment = () => {
         // Create new payment locally
         const localPayment = await database.write(async () => {
           return await paymentCollection.create((payment) => {
-            Object.assign(payment, params);
+            Object.assign(payment, restParams);
             payment.syncState = 'created';
+            payment.customer.id = customer;
+            payment.trip.id = trip;
             payment.changedKeys = null;
           });
         });
@@ -66,7 +73,9 @@ export const usePayment = () => {
       }
 
       // Update synced payment with changed keys tracking
-      const existingKeys = (params.payment!.changedKeys || '').split(',').filter(Boolean);
+      const existingKeys = (params.payment!.changedKeys || '')
+        .split(',')
+        .filter(Boolean);
       const newKeys = ['type', 'amount', 'comments'];
       const allChangedKeys = Array.from(new Set([...existingKeys, ...newKeys]));
 
@@ -87,9 +96,13 @@ export const usePayment = () => {
       if (!context?.localPayment) return;
 
       if (result.type === 'create') {
-        const invoiceId = typeof result.doc.invoice === 'string' 
-          ? result.doc.invoice 
-          : result.doc.invoice.id;
+        const invoiceId =
+          typeof result.doc.invoice === 'string'
+            ? result.doc.invoice
+            : result.doc.invoice.id;
+        console.log('invoiceId', invoiceId);
+        console.log(', result.doc.id', result.doc.id);
+
         await context.localPayment.markAsSynced(result.doc.id, invoiceId);
       } else {
         await context.localPayment.markAsSynced();
@@ -101,4 +114,3 @@ export const usePayment = () => {
     },
   });
 };
-
