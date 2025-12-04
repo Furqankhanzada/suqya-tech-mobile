@@ -22,7 +22,7 @@ export const usePayment = () => {
 
   return useMutation({
     mutationFn: async (params: PaymentParams) => {
-      console.log('mutationFn');
+      console.log('mutationFn', params);
 
       const isUnsyncedPayment = params.payment?.syncState === 'created';
       const isSyncedPaymentUpdate = params.payment && !isUnsyncedPayment;
@@ -44,52 +44,66 @@ export const usePayment = () => {
     },
 
     onMutate: async (params) => {
-      const { customer, trip, ...restParams } = params;
-      const isNewPayment = !params.payment;
-      const isUnsyncedPayment = params.payment?.syncState === 'created';
+      const { customer, trip, payment, amount, type, comments, paidAt } = params;
+      const isNewPayment = !payment;
+      const isUnsyncedPayment = payment?.syncState === 'created';
 
       if (isNewPayment) {
         // Create new payment locally
         const localPayment = await database.write(async () => {
-          return await paymentCollection.create((payment) => {
-            Object.assign(payment, restParams);
-            payment.syncState = 'created';
-            payment.customer.id = customer;
-            payment.trip.id = trip;
-            payment.changedKeys = null;
+          return await paymentCollection.create((p) => {
+            p.amount = amount;
+            p.type = type;
+            p.comments = comments;
+            p.paidAt = paidAt;
+            p.customer.id = customer;
+            p.trip.id = trip;
+            p.syncState = 'created';
+            p.changedKeys = null;
           });
         });
+        console.log('localPayment>>>???', localPayment);
+        console.log('localPayment>>>??? payment', payment);
         return { localPayment };
       }
 
       if (isUnsyncedPayment) {
+        console.log('isUnsyncedPayment>>>', isUnsyncedPayment);
+
         // Update unsynced payment before sync
-        await database.write(async () => {
-          await params.payment!.update((payment) => {
-            Object.assign(payment, params);
+        const localPayment = await database.write(async () => {
+          await payment!.update((p) => {
+            p.amount = amount;
+            p.type = type;
+            p.comments = comments;
+            p.paidAt = paidAt;
+            p.syncState = 'updated';
+            p.changedKeys = null;
           });
+          return payment!;
         });
-        return { localPayment: params.payment };
+        return { localPayment };
       }
 
       // Update synced payment with changed keys tracking
-      const existingKeys = (params.payment!.changedKeys || '')
+      const existingKeys = (payment!.changedKeys || '')
         .split(',')
         .filter(Boolean);
       const newKeys = ['type', 'amount', 'comments'];
       const allChangedKeys = Array.from(new Set([...existingKeys, ...newKeys]));
 
-      await database.write(async () => {
-        await params.payment!.update((payment) => {
-          payment.type = params.type;
-          payment.amount = params.amount;
-          payment.comments = params.comments;
-          payment.changedKeys = allChangedKeys.join(',');
-          payment.syncState = 'updated';
+      const localPayment = await database.write(async () => {
+        await payment!.update((p) => {
+          p.type = type;
+          p.amount = amount;
+          p.comments = comments;
+          p.changedKeys = allChangedKeys.join(',');
+          p.syncState = 'updated';
         });
+        return payment!;
       });
 
-      return { localPayment: params.payment };
+      return { localPayment };
     },
 
     onSuccess: async (result, _, context) => {
@@ -101,10 +115,11 @@ export const usePayment = () => {
             ? result.doc.invoice
             : result.doc.invoice.id;
         console.log('invoiceId', invoiceId);
-        console.log(', result.doc.id', result.doc.id);
+        console.log('result.doc.id', result.doc.id);
 
         await context.localPayment.markAsSynced(result.doc.id, invoiceId);
       } else {
+        console.log('else result.doc.id', result.doc.id);
         await context.localPayment.markAsSynced();
       }
     },
