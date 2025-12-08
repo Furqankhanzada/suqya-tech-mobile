@@ -15,9 +15,9 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.starterkitexpo",
+      "bundleIdentifier": "com.furqancodes.suqyatech",
       "config": {
-        "googleMapsApiKey": "AIzaSyBRF8qX1KhVDDjtuUc0SWkmpejaG8f4Ca8"
+        "googleMapsApiKey": "process.env.GOOGLE_MAPS_API_KEY"
       }
     },
     "android": {
@@ -26,9 +26,11 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.starterkitexpo",
-      "googleMaps": {
-        "apiKey": "AIzaSyBRF8qX1KhVDDjtuUc0SWkmpejaG8f4Ca8"
+      "package": "com.furqancodes.suqyatech",
+      "config": {
+        "googleMaps": {
+          "apiKey": "process.env.GOOGLE_MAPS_API_KEY"
+        }
       },
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
@@ -73,6 +75,6 @@
         "projectId": "8d924673-b815-4a12-906c-d937bf798b43"
       }
     },
-    "owner": "furqankhanzada"
+    "owner": "furqan-codes"
   }
 }
