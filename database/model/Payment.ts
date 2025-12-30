@@ -42,15 +42,17 @@ export class PaymentModel extends Model {
   }
 
   @writer async markAsSynced(id?: string, invoice?: string) {
-    const collection = this.database.get<PaymentModel>('payments');
     await this.update((payment) => {
+      console.log('payment>>>??? markAsSynced payment._raw', {...payment._raw});
+      console.log('payment>>>??? markAsSynced payment', payment);
       if (id) {
-        payment._raw = sanitizedRaw({ id }, collection.schema);
+        payment._raw.id = id;
       }
       if (invoice) {
         payment.invoice = invoice;
       }
-      Object.assign(payment, { syncState: 'synced', changedKeys: null });
+      payment.syncState = 'synced';
+      payment.changedKeys = null;
     });
   }
 }

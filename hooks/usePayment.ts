@@ -6,6 +6,7 @@ import {
 } from '@/api/invoice';
 import { PaymentModel } from '@/database/model/Payment';
 import { database } from '@/database';
+import { sanitizedRaw } from '@nozbe/watermelondb/RawRecord';
 
 type PaymentParams = {
   customer: string;
@@ -19,7 +20,7 @@ type PaymentParams = {
 
 export const usePayment = () => {
   const paymentCollection = database.get<PaymentModel>('payments');
-  
+
   return useMutation({
     mutationFn: async (params: PaymentParams) => {
       const isUnsyncedPayment = params.payment?.syncState === 'created';
@@ -34,22 +35,26 @@ export const usePayment = () => {
         const result = await updatePayment(params.payment!.id, updates);
         return { type: 'update' as const, doc: result.doc };
       }
-
       const result = await createPayment(params);
       return { type: 'create' as const, doc: result.doc };
     },
 
     onMutate: async (params) => {
-      const isNewPayment = !params.payment;
-      const isUnsyncedPayment = params.payment?.syncState === 'created';
+      const { customer, trip, payment, amount, type, comments, paidAt } = params;
+      const isNewPayment = !payment;
+      const isUnsyncedPayment = payment?.syncState === 'created';
 
       if (isNewPayment) {
         // Create new payment locally
         const localPayment = await database.write(async () => {
-          return await paymentCollection.create((payment) => {
-            Object.assign(payment, params);
-            payment.syncState = 'created';
-            payment.changedKeys = null;
+          return await paymentCollection.create((p) => {
+            p._raw = sanitizedRaw({ customer_id: customer, trip_id: trip }, paymentCollection.schema);
+            p.amount = amount;
+            p.type = type;
+            p.comments = comments;
+            p.paidAt = paidAt;
+            p.syncState = 'created';
+            p.changedKeys = null;
           });
         });
         return { localPayment };
@@ -57,39 +62,50 @@ export const usePayment = () => {
 
       if (isUnsyncedPayment) {
         // Update unsynced payment before sync
-        await database.write(async () => {
-          await params.payment!.update((payment) => {
-            Object.assign(payment, params);
+        const localPayment = await database.write(async () => {
+          await payment!.update((p) => {
+            p.amount = amount;
+            p.type = type;
+            p.comments = comments;
+            p.paidAt = paidAt;
+            p.syncState = 'updated';
+            p.changedKeys = null;
           });
+          return payment!;
         });
-        return { localPayment: params.payment };
+        return { localPayment };
       }
 
       // Update synced payment with changed keys tracking
-      const existingKeys = (params.payment!.changedKeys || '').split(',').filter(Boolean);
+      const existingKeys = (payment!.changedKeys || '')
+        .split(',')
+        .filter(Boolean);
       const newKeys = ['type', 'amount', 'comments'];
       const allChangedKeys = Array.from(new Set([...existingKeys, ...newKeys]));
 
-      await database.write(async () => {
-        await params.payment!.update((payment) => {
-          payment.type = params.type;
-          payment.amount = params.amount;
-          payment.comments = params.comments;
-          payment.changedKeys = allChangedKeys.join(',');
-          payment.syncState = 'updated';
+      const localPayment = await database.write(async () => {
+        await payment!.update((p) => {
+          p.type = type;
+          p.amount = amount;
+          p.comments = comments;
+          p.changedKeys = allChangedKeys.join(',');
+          p.syncState = 'updated';
         });
+        return payment!;
       });
 
-      return { localPayment: params.payment };
+      return { localPayment };
     },
 
     onSuccess: async (result, _, context) => {
       if (!context?.localPayment) return;
 
       if (result.type === 'create') {
-        const invoiceId = typeof result.doc.invoice === 'string' 
-          ? result.doc.invoice 
-          : result.doc.invoice.id;
+        const invoiceId =
+          typeof result.doc.invoice === 'string'
+            ? result.doc.invoice
+            : result.doc.invoice.id;
+
         await context.localPayment.markAsSynced(result.doc.id, invoiceId);
       } else {
         await context.localPayment.markAsSynced();
@@ -97,8 +113,7 @@ export const usePayment = () => {
     },
 
     onError: (error: Error) => {
-      console.error('Payment operation failed:', error.message);
+      console.error('Payment operation failed:', error);
     },
   });
 };
-
