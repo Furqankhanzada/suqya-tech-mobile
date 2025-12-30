@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, forwardRef, useImperativeHandle, useEffect, useState } from 'react';
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetTextInput, BottomSheetView } from '@gorhom/bottom-sheet';
 import { cssInterop } from 'nativewind';
 import { Controller, useForm } from 'react-hook-form';
 import {
@@ -15,7 +15,6 @@ import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { Button, ButtonText } from '@/components/ui/button';
-import { Input, InputField, InputIcon, InputSlot } from '@/components/ui/input';
 import {
   FormControl,
   FormControlError,
@@ -37,7 +36,6 @@ import {
   SelectDragIndicatorWrapper,
   SelectItem,
 } from '@/components/ui/select';
-import { Textarea, TextareaInput } from '@/components/ui/textarea';
 import {
   BottomSheetBackdrop,
   BottomSheetDragIndicator,
@@ -169,6 +167,10 @@ const Payment = forwardRef<PaymentRef, PaymentProps>(
         snapPoints={['70%']}
         backdropComponent={backdropComponent}
         handleComponent={BottomSheetDragIndicator}
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
+        android_keyboardInputMode="adjustPan"
+        enablePanDownToClose
         // @ts-ignore
         backgroundClassName="bg-background"
         handleIndicatorClassName="bg-muted-foreground mt-2"
@@ -255,21 +257,16 @@ const Payment = forwardRef<PaymentRef, PaymentProps>(
                       Payment Amount
                     </FormControlLabelText>
                   </FormControlLabel>
-                  <Input className="bg-input-background border-border rounded-lg">
-                    <InputSlot className="pl-3">
-                      <InputIcon
-                        as={Wallet}
-                        className="w-5 h-5 text-muted-foreground"
-                      />
-                    </InputSlot>
-                    <InputField
-                      placeholder="Enter amount"
-                      keyboardType="numeric"
-                      className="text-foreground"
+                  <Box className="flex-row items-center bg-input-background border border-border rounded-lg px-3">
+                    <Wallet size={20} color="#9CA3AF" style={{ marginRight: 8 }} />
+                    <BottomSheetTextInput
                       value={value}
                       onChangeText={onChange}
+                      placeholder="Enter amount"
+                      keyboardType="numeric"
+                      className="flex-1 text-foreground py-3"
                     />
-                  </Input>
+                  </Box>
                   <FormControlError>
                     <FormControlErrorIcon
                       as={AlertCircleIcon}
@@ -293,19 +290,15 @@ const Payment = forwardRef<PaymentRef, PaymentProps>(
                       Payment Note (Optional)
                     </FormControlLabelText>
                   </FormControlLabel>
-                  <Textarea
-                    variant="outline"
-                    size="sm"
-                    className="border border-border rounded-lg bg-input-background"
-                  >
-                    <TextareaInput
-                      placeholder="Add a note about this payment..."
-                      className="text-foreground resize-none"
-                      numberOfLines={3}
-                      value={field.value}
-                      onChangeText={field.onChange}
-                    />
-                  </Textarea>
+                  <BottomSheetTextInput
+                    value={field.value}
+                    onChangeText={field.onChange}
+                    placeholder="Add a note about this payment..."
+                    multiline
+                    numberOfLines={3}
+                    textAlignVertical="top"
+                    className="bg-input-background border border-border rounded-lg p-3 text-foreground min-h-24"
+                  />
                 </FormControl>
               )}
             />
